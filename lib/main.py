@@ -5,6 +5,7 @@ from feel_request import feel_request
 from connectors import telegram_connector_instance
 from apscheduler.schedulers.background import BlockingScheduler
 from utils import gen_iso_string
+import os
 
 
 def main():
@@ -30,7 +31,7 @@ def main():
             nl = '\n'
             telegram_connector_instance.send_message(f'{header}:{nl} {nl.join(values_diff)}')
         else:
-            print('All values are correct')
+            print(f'All values are correct: {values_diff}')
         print('---------------------------')
 
     except Exception as ex:
@@ -40,5 +41,5 @@ def main():
 if __name__ == '__main__':
     main()
     scheduler = BlockingScheduler()
-    scheduler.add_job(main, 'interval', seconds=85)
+    scheduler.add_job(main, 'interval', seconds=int(os.getenv('JOB_INTERVAL_IN_SECONDS')))
     scheduler.start()
