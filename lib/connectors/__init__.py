@@ -1,0 +1,1 @@
+from connectors.telegram_connector import telegram_connector_instance
