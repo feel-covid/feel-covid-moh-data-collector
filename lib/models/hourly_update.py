@@ -2,6 +2,7 @@ from __future__ import annotations
 from utils import gen_iso_string, parse_iso_string
 import json
 import base64
+from functools import reduce
 
 
 class HourlyUpdate:
@@ -66,6 +67,30 @@ class HourlyUpdate:
             hospital=hourly_update_dict['treatment']['hospital'],
             recovered=hourly_update_dict['recovered'],
             deceased=hourly_update_dict['deceased']
+        )
+
+    @staticmethod
+    def _aggregate_moh_field(res, index):
+        return reduce(
+            lambda x, y: x + y,
+            map(
+                lambda x: x['amount'],
+                res[index]['data']
+            )
+        )
+
+    @classmethod
+    def from_moh_response(cls, response):
+        return cls(
+            total=cls._aggregate_moh_field(response, 1),
+            date=response[0]['data']['lastUpdate'],
+            severe=response[2]['data'][0]['amount'],
+            intubated=response[5]['data'][-1]['CountBreath'],
+            mid=response[2]['data'][1]['amount'],
+            home=response[4]['data'][0]['amount'],
+            hospital=response[4]['data'][1]['amount'],
+            recovered=cls._aggregate_moh_field(response, 7),
+            deceased=cls._aggregate_moh_field(response, 6)
         )
 
     def compare_values(self, other: HourlyUpdate):

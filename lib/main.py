@@ -1,45 +1,25 @@
 import settings
-import datetime
-from moh_request import moh_request
-from feel_request import feel_request
-from connectors import telegram_connector_instance
-from apscheduler.schedulers.background import BlockingScheduler
-from utils import gen_iso_string
+
 import os
 
+from apscheduler.schedulers.background import BackgroundScheduler
+from flask import Flask
+from flask_restful import Api
 
-def main():
-    try:
-        moh_data = moh_request()
-        feel_data = feel_request()
+from jobs.job_notify_on_moh_update import job_notify_on_moh_update
+from resources.publish_resource import PublishResource
+from resources.notify_resource import NotifyResource
 
-        print('---------------------------')
-        if feel_data.date != moh_data.date:
-            url = f"https://priceless-murdock-f4daba.netlify.app/?moh-data={moh_data.as_base64_string()}"
-            telegram_connector_instance.send_message(
-                f"הנתונים בדשבורד הקורונה של משרד הבריאות עודכנו, ניתן לעדכן את האתר כאן:\n {url}")
-            return
-        else:
-            print(f"{gen_iso_string(datetime.datetime.now())} - No Update Found")
-            print(f"Feel Date - {feel_data.date}")
-            print(f"Moh Date  - {moh_data.date}")
+scheduler = BackgroundScheduler()
 
-        values_diff = moh_data.compare_values(feel_data)
+app = Flask(__name__)
+api = Api(app)
 
-        if values_diff:
-            header = 'נמצאו ערכים לא תואמים בין האתר לדשבורד משרד הבריאות'
-            nl = '\n'
-            telegram_connector_instance.send_message(f'{header}:{nl} {nl.join(values_diff)}')
-        else:
-            print(f'All values are correct: {values_diff}')
-        print('---------------------------')
-
-    except Exception as ex:
-        telegram_connector_instance.send_message(f'התרחשה שגיאה בבדיקה: {ex}')
-
+api.add_resource(PublishResource, '/v1/publish')
+api.add_resource(NotifyResource, '/v1/notify')
 
 if __name__ == '__main__':
-    main()
-    scheduler = BlockingScheduler()
-    scheduler.add_job(main, 'interval', seconds=int(os.getenv('JOB_INTERVAL_IN_SECONDS')))
+    job_notify_on_moh_update()
+    scheduler.add_job(job_notify_on_moh_update, 'interval', seconds=int(os.getenv('JOB_INTERVAL_IN_SECONDS')))
     scheduler.start()
+    app.run(port=6000, debug=False)

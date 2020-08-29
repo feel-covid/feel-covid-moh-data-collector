@@ -1,9 +1,7 @@
 import requests
-from functools import reduce
-from hourly_update import HourlyUpdate
 
 
-def moh_request() -> HourlyUpdate:
+def moh_request():
     url = 'https://datadashboardapi.health.gov.il/api/queries/_batch'
 
     headers = {
@@ -21,34 +19,4 @@ def moh_request() -> HourlyUpdate:
 
     response = requests.post(url, headers=headers, data=body).json()
 
-    hourly_update = HourlyUpdate(
-        total=reduce(
-            lambda x, y: x + y,
-            map(
-                lambda x: x['amount'],
-                response[1]['data']
-            )
-        ),
-        date=response[0]['data']['lastUpdate'],
-        severe=response[2]['data'][0]['amount'],
-        intubated=response[5]['data'][-1]['CountBreath'],
-        mid=response[2]['data'][1]['amount'],
-        home=response[4]['data'][0]['amount'],
-        hospital=response[4]['data'][1]['amount'],
-        recovered=reduce(
-            lambda x, y: x + y,
-            map(
-                lambda x: x['amount'],
-                response[7]['data']
-            )
-        ),
-        deceased=reduce(
-            lambda x, y: x + y,
-            map(
-                lambda x: x['amount'],
-                response[6]['data']
-            )
-        )
-    )
-
-    return hourly_update
+    return response
