@@ -5,6 +5,7 @@ from models.hourly_update import HourlyUpdate
 from connectors import telegram_connector_instance
 from moh_request import moh_request
 from utils import gen_iso_string
+import traceback
 
 
 def _feel_request():
@@ -29,8 +30,9 @@ def job_notify_on_moh_update(notifier=telegram_connector_instance):
         moh_data = HourlyUpdate.from_moh_response(moh_request())
         feel_data = HourlyUpdate.from_hourly_update_dict(_feel_request())
 
+        print('###########################')
         print('---------------------------')
-        if feel_data.date != moh_data.date:
+        if moh_data.date > feel_data.date:
             url = f"https://priceless-murdock-f4daba.netlify.app/?moh-data={moh_data.as_base64_string()}"
             notifier.notify(
                 f"הנתונים בדשבורד הקורונה של משרד הבריאות עודכנו, ניתן לעדכן את האתר כאן:\n {url}")
@@ -39,16 +41,20 @@ def job_notify_on_moh_update(notifier=telegram_connector_instance):
             print(f"{gen_iso_string(datetime.datetime.now())} - No Update Found")
             print(f"Feel Date - {feel_data.date}")
             print(f"Moh Date  - {moh_data.date}")
-
-        values_diff = moh_data.compare_values(feel_data)
-
-        if values_diff:
-            header = 'נמצאו ערכים לא תואמים בין האתר לדשבורד משרד הבריאות'
-            nl = '\n'
-            notifier.notify(f'{header}:\n {nl.join(values_diff)}')
-        else:
-            print(f'All values are correct: {values_diff}')
         print('---------------------------')
 
-    except Exception as ex:
-        notifier.notify(f'התרחשה שגיאה בבדיקה: {ex}')
+        if moh_data.date == feel_data.date:
+            values_diff, validated_values = moh_data.compare_values(feel_data)
+
+            if values_diff:
+                header = 'נמצאו ערכים לא תואמים בין האתר לדשבורד משרד הבריאות'
+                nl = '\n'
+                notifier.notify(f'{header}:\n {nl.join(values_diff)}')
+            else:
+                print('All values are correct:')
+                print('\n'.join(validated_values))
+            print('---------------------------')
+
+    except Exception:
+        traceback.print_exc()
+        # notifier.notify(f'התרחשה שגיאה בבדיקה: {ex}')

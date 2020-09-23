@@ -13,6 +13,7 @@ class HourlyUpdate:
                  intubated,
                  mid,
                  home,
+                 hotel,
                  hospital,
                  recovered,
                  deceased):
@@ -22,6 +23,7 @@ class HourlyUpdate:
         self.intubated = intubated
         self.mid = mid
         self.home = home
+        self.hotel = hotel
         self.hospital = hospital
         self.recovered = recovered
         self.deceased = deceased
@@ -39,8 +41,8 @@ class HourlyUpdate:
             },
             'treatment': {
                 'home': self.home,
+                'hotel': self.hotel,
                 'hospital': self.hospital,
-                'hotel': 0,
                 'undecided': 0
             },
             'recovered': self.recovered,
@@ -64,6 +66,7 @@ class HourlyUpdate:
             intubated=hourly_update_dict['severe']['intubated'],
             mid=hourly_update_dict['mid']['cases'],
             home=hourly_update_dict['treatment']['home'],
+            hotel=hourly_update_dict['treatment']['hotel'],
             hospital=hourly_update_dict['treatment']['hospital'],
             recovered=hourly_update_dict['recovered'],
             deceased=hourly_update_dict['deceased']
@@ -88,7 +91,8 @@ class HourlyUpdate:
             intubated=response[5]['data'][-1]['CountBreath'],
             mid=response[2]['data'][1]['amount'],
             home=response[4]['data'][0]['amount'],
-            hospital=response[4]['data'][1]['amount'],
+            hotel=response[4]['data'][1]['amount'],
+            hospital=response[4]['data'][2]['amount'],
             recovered=cls._aggregate_moh_field(response, 7),
             deceased=cls._aggregate_moh_field(response, 6)
         )
@@ -96,12 +100,16 @@ class HourlyUpdate:
     def compare_values(self, other: HourlyUpdate):
         excluded_keys = ('date', 'total')
         diff = []
+        validated_values = []
 
         self_values = self.__dict__.items()
         other_values = other.__dict__
 
         for key, value in self_values:
-            if key not in excluded_keys and other_values[key] != value:
-                diff.append(f'Wrong value on field "{key}": {value} != {other_values[key]}')
+            if key not in excluded_keys:
+                if other_values[key] != value:
+                    diff.append(f'Wrong value on field "{key}": {value} != {other_values[key]}')
+                else:
+                    validated_values.append(f'Correct value for field "{key}": {value} == {other_values[key]}')
 
-        return diff
+        return diff, validated_values
