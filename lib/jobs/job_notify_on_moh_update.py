@@ -1,4 +1,6 @@
 import datetime
+import os
+
 import requests
 from urllib.parse import urlencode
 from models.hourly_update import HourlyUpdate
@@ -55,6 +57,7 @@ def job_notify_on_moh_update(notifier=telegram_connector_instance):
                 print('\n'.join(validated_values))
             print('---------------------------')
 
-    except Exception:
+    except Exception as ex:
         traceback.print_exc()
-        # notifier.notify(f'התרחשה שגיאה בבדיקה: {ex}')
+        if os.getenv('NOTIFICATION_ON_FAILURE') == '1':
+            notifier.notify(f'התרחשה שגיאה בבדיקה: {ex}')

@@ -1,5 +1,3 @@
-import settings
-
 import os
 
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -7,8 +5,8 @@ from flask import Flask
 from flask_restful import Api
 
 from jobs.job_notify_on_moh_update import job_notify_on_moh_update
-from resources.publish_resource import PublishResource
 from resources.notify_resource import NotifyResource
+from resources.publish_resource import PublishResource
 
 scheduler = BackgroundScheduler()
 
