@@ -10,7 +10,7 @@ import traceback
 
 def _feel_request():
     today = datetime.datetime.now()
-    yesterday = today - datetime.timedelta(days=1)
+    yesterday = today - datetime.timedelta(days=7)
 
     params = {
         'startDate': f"\"{yesterday}\"",
@@ -20,7 +20,7 @@ def _feel_request():
 
     url = f'https://api.feel.co.il/api/country/stats?' + urlencode(params)
 
-    response = requests.get(url)
+    response = requests.get(url, timeout=20)
 
     return response.json()[-1]
 
@@ -29,11 +29,11 @@ def job_notify_on_moh_update(notifier=telegram_connector_instance):
     try:
         moh_data = HourlyUpdate.from_moh_response(moh_request())
         feel_data = HourlyUpdate.from_hourly_update_dict(_feel_request())
+        url = f"https://priceless-murdock-f4daba.netlify.app/?moh-data={moh_data.as_base64_string()}"
 
         print('###########################')
         print('---------------------------')
         if moh_data.date > feel_data.date:
-            url = f"https://priceless-murdock-f4daba.netlify.app/?moh-data={moh_data.as_base64_string()}"
             notifier.notify(
                 f"הנתונים בדשבורד הקורונה של משרד הבריאות עודכנו, ניתן לעדכן את האתר כאן:\n {url}")
             return
@@ -50,6 +50,8 @@ def job_notify_on_moh_update(notifier=telegram_connector_instance):
                 header = 'נמצאו ערכים לא תואמים בין האתר לדשבורד משרד הבריאות'
                 nl = '\n'
                 notifier.notify(f'{header}:\n {nl.join(values_diff)}')
+                notifier.notify(
+                    f"קישור לנתונים המעודכנים:\n {url}")
             else:
                 print('All values are correct:')
                 print('\n'.join(validated_values))
