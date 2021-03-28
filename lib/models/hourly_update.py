@@ -60,7 +60,8 @@ class HourlyUpdate:
     @classmethod
     def from_hourly_update_dict(cls, hourly_update_dict):
         return cls(
-            total=hourly_update_dict.get('total', 0),
+            total=hourly_update_dict['deceased'] + hourly_update_dict['recovered'] + hourly_update_dict['mid'][
+                'cases'] + hourly_update_dict['severe']['cases'] + hourly_update_dict['light']['cases'],
             date=hourly_update_dict['date'],
             severe=hourly_update_dict['severe']['cases'],
             intubated=hourly_update_dict['severe']['intubated'],
@@ -73,11 +74,11 @@ class HourlyUpdate:
         )
 
     @staticmethod
-    def _aggregate_moh_field(res, index):
+    def _aggregate_moh_field(res, index, key='amount'):
         return reduce(
             lambda x, y: x + y,
             map(
-                lambda x: x['amount'],
+                lambda x: x[key],
                 res[index]['data']
             )
         )
@@ -88,17 +89,17 @@ class HourlyUpdate:
             total=cls._aggregate_moh_field(response, 1),
             date=response[0]['data']['lastUpdate'],
             severe=response[2]['data'][0]['amount'],
-            intubated=response[5]['data'][-1]['CountBreath'],
+            intubated=response[4]['data'][-1]['CountBreath'],
             mid=response[2]['data'][1]['amount'],
-            home=response[4]['data'][0]['amount'],
-            hotel=response[4]['data'][1]['amount'],
-            hospital=response[4]['data'][2]['amount'],
-            recovered=cls._aggregate_moh_field(response, 7),
-            deceased=cls._aggregate_moh_field(response, 6)
+            home=response[3]['data'][0]['amount'],
+            hotel=response[3]['data'][1]['amount'],
+            hospital=response[3]['data'][2]['amount'],
+            recovered=cls._aggregate_moh_field(response, 1, 'recovered'),
+            deceased=cls._aggregate_moh_field(response, 5)
         )
 
     def compare_values(self, other: HourlyUpdate):
-        excluded_keys = ('date', 'total')
+        excluded_keys = ('date',)
         diff = []
         validated_values = []
 
