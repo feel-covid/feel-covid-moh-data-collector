@@ -6,6 +6,7 @@ from flask_restful import Resource
 
 from moh_request import moh_request
 
+
 class PublishResource(Resource):
     def __init__(self):
         super().__init__()
@@ -22,9 +23,10 @@ class PublishResource(Resource):
     def _aggregate_ird(self, moh_response):
         daily_ird_dict = {
             current_day['date']: {'infected': current_day['amount'], 'recovered': current_day['recovered'],
-                                  'date': current_day['date']} for current_day in moh_response[1]['data'][-self.days_amount_to_update:]}
+                                  'date': current_day['date']} for current_day in
+            moh_response[1]['data'][-self.days_amount_to_update:]}
 
-        for current_day in moh_response[5]['data'][-self.days_amount_to_update:]:
+        for current_day in moh_response[5]['data'][-(self.days_amount_to_update + 1):]:
             daily_ird_dict[current_day['date']]['deceased'] = current_day['amount']
 
         return list(daily_ird_dict.values())
@@ -59,7 +61,8 @@ class PublishResource(Resource):
         moh_response = moh_request()
         daily_ird_data = self.gen_post_struct('dailyStatsData', self._aggregate_ird(moh_response))
         daily_test_amount_data = self.gen_post_struct('testsData', self._aggregate_test_amount(moh_response))
-        daily_vaccinations_data = self.gen_post_struct('dailyVaccinationsData', self._aggregate_vaccinations(moh_response))
+        daily_vaccinations_data = self.gen_post_struct('dailyVaccinationsData',
+                                                       self._aggregate_vaccinations(moh_response))
 
         daily_ird_url = f'{os.getenv("FEEL_API_URL")}/api/daily-ird'
         daily_test_amount_url = f'{os.getenv("FEEL_API_URL")}/api/daily-test-amount'

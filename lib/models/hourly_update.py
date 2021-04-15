@@ -95,7 +95,7 @@ class HourlyUpdate:
             hotel=response[3]['data'][1]['amount'],
             hospital=response[3]['data'][2]['amount'],
             recovered=cls._aggregate_moh_field(response, 1, 'recovered'),
-            deceased=cls._aggregate_moh_field(response, 5)
+            deceased=response[5]['data'][-1]['total']
         )
 
     def compare_values(self, other: HourlyUpdate):
