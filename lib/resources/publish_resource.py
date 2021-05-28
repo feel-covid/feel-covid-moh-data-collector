@@ -26,8 +26,9 @@ class PublishResource(Resource):
                                   'date': current_day['date']} for current_day in
             moh_response[1]['data'][-self.days_amount_to_update:]}
 
-        for current_day in moh_response[5]['data'][-(self.days_amount_to_update + 1):]:
-            daily_ird_dict[current_day['date']]['deceased'] = current_day['amount']
+        for current_day in moh_response[5]['data'][-self.days_amount_to_update:]:
+            if daily_ird_dict.get(current_day['date']) is not None:
+                daily_ird_dict[current_day['date']]['deceased'] = current_day['amount']
 
         return list(daily_ird_dict.values())
 
