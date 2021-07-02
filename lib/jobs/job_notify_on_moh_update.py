@@ -10,10 +10,10 @@ import traceback
 
 def _feel_request():
     today = datetime.datetime.now()
-    yesterday = today - datetime.timedelta(days=7)
+    week_ago = today - datetime.timedelta(days=7)
 
     params = {
-        'startDate': f"\"{yesterday}\"",
+        'startDate': f"\"{week_ago}\"",
         'endDate': f"\"{today}\"",
         'name': 'israel'
     }
