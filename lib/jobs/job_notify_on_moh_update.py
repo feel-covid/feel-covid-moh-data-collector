@@ -6,11 +6,12 @@ from connectors import telegram_connector_instance
 from moh_request import moh_request
 from utils import gen_iso_string
 import traceback
+import os
 
 
 def _feel_request():
     today = datetime.datetime.now()
-    week_ago = today - datetime.timedelta(days=7)
+    week_ago = today - datetime.timedelta(days=800)
 
     params = {
         'startDate': f"\"{week_ago}\"",
@@ -18,7 +19,7 @@ def _feel_request():
         'name': 'israel'
     }
 
-    url = f'https://api.feel.co.il/api/country/stats?' + urlencode(params)
+    url = f'{os.getenv("FEEL_API_URL")}/api/country/hourly-updates?' + urlencode(params)
 
     response = requests.get(url, timeout=20)
 
@@ -29,7 +30,7 @@ def job_notify_on_moh_update(notifier=telegram_connector_instance):
     try:
         moh_data = HourlyUpdate.from_moh_response(moh_request())
         feel_data = HourlyUpdate.from_hourly_update_dict(_feel_request())
-        url = f"https://priceless-murdock-f4daba.netlify.app/?moh-data={moh_data.as_base64_string()}"
+        url = f"{os.getenv('SIMPLE_GUI_URL')}/?moh-data={moh_data.as_base64_string()}"
 
         print('###########################')
         print('---------------------------')
@@ -57,6 +58,7 @@ def job_notify_on_moh_update(notifier=telegram_connector_instance):
                 print('\n'.join(validated_values))
             print('---------------------------')
 
-    except Exception:
+    except Exception as ex:
         traceback.print_exc()
-        # notifier.notify(f'התרחשה שגיאה בבדיקה: {ex}')
+        if os.getenv("NOTIFICATION_ON_FAILURE") == '1':
+            notifier.notify(f'התרחשה שגיאה בבדיקה: {ex}')
