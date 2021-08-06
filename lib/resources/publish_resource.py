@@ -38,9 +38,9 @@ class PublishResource(Resource):
         for current_day in moh_response[6]['data'][-self.days_amount_to_update:]:
             test_amount.append({
                 'date': current_day['date'],
-                'amount': current_day['amountVirusDiagnosis'],
+                'amount': current_day['amountPersonTested'],
                 'positive': 0 if current_day['positiveAmount'] == -1 else round(
-                    current_day['positiveAmount'] / current_day['amountVirusDiagnosis'] * 100, 2)
+                    current_day['positiveAmount'] / current_day['amountPersonTested'] * 100, 2)
             })
 
         return test_amount
@@ -54,7 +54,10 @@ class PublishResource(Resource):
                 'first_dose_cumulative': current_day['vaccinated_cum'],
                 'second_dose_amount': current_day['vaccinated_seconde_dose'],
                 'second_dose_percentage': current_day['vaccinated_seconde_dose_population_perc'],
-                'second_dose_cumulative': current_day['vaccinated_seconde_dose_cum']
+                'second_dose_cumulative': current_day['vaccinated_seconde_dose_cum'],
+                'third_dose_amount': current_day['vaccinated_third_dose'],
+                'third_dose_percentage': current_day['vaccinated_third_dose_population_perc'],
+                'third_dose_cumulative': current_day['vaccinated_third_dose_cum']
             } for current_day in moh_response[7]['data'][-self.days_amount_to_update:]
         ]
 
