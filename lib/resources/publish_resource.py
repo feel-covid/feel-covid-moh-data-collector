@@ -61,7 +61,7 @@ class PublishResource(Resource):
             } for current_day in moh_response[7]['data'][-self.days_amount_to_update:]
         ]
 
-    def post(self):
+    def get(self):
         moh_response = moh_request()
         daily_ird_data = self.gen_post_struct('dailyStatsData', self._aggregate_ird(moh_response))
         daily_test_amount_data = self.gen_post_struct('testsData', self._aggregate_test_amount(moh_response))

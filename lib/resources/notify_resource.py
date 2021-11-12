@@ -7,7 +7,7 @@ class NotifyResource(Resource):
     def __init__(self):
         super().__init__()
 
-    def post(self):
+    def get(self):
         job_notify_on_moh_update()
 
         return 200
